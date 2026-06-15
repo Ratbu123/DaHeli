@@ -596,18 +596,18 @@ async function saveRecord() {
     };
 
     if (!record.employee_name || !record.record_date) {
-        alert("⚠️ Please enter Employee Name and Date");
+        alert("Please enter Employee Name and Date");
         return;
     }
 
     const { error } = await db.from("daily_time_records").insert([record]);
 
     if (error) {
-        alert("❌ Error: " + error.message);
+        alert("Error: " + error.message);
         return;
     }
 
-    alert("✅ Record saved successfully!");
+    alert("Record saved successfully!");
 }
 
 async function loadRecords() {
