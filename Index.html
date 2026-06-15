@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Time Record</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --accent: #10b981;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-700: #334155;
+            --gray-900: #0f172a;
+            --success: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+            color: var(--gray-900);
+            line-height: 1.6;
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1180px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(30, 64, 175, 0.15);
+            overflow: hidden;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 32px 40px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(to right, #60a5fa, #a5b4fc);
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            margin-top: 6px;
+            font-size: 15px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-section {
+            background: var(--gray-50);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 36px;
+            border: 1px solid var(--gray-100);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 14.5px;
+            margin-bottom: 8px;
+            color: var(--gray-700);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        input, select {
+            padding: 13px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: 10px;
+            font-size: 15.5px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .inline-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .inline-group select {
+            flex: 1;
+        }
+
+        .table-container {
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: var(--gray-900);
+            color: white;
+            padding: 18px 14px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 16px 14px;
+            border-bottom: 1px solid var(--gray-100);
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        td[contenteditable="true"] {
+            background: #fefce8;
+            min-height: 60px;
+            outline: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        td[contenteditable="true"]:focus {
+            background: #fef9c3;
+            outline: 2px solid var(--primary);
+        }
+
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: white;
+            border: 2px solid var(--gray-200);
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        button {
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        button.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        button.secondary {
+            background: #64748b;
+            color: white;
+        }
+
+        button.print-btn {
+            background: var(--accent);
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+        }
+
+        .modal-content {
+            background: white;
+            width: 94%;
+            max-width: 1080px;
+            margin: 40px auto;
+            border-radius: 20px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--gray-50);
+        }
+
+        .close-btn {
+            font-size: 36px;
+            font-weight: 300;
+            cursor: pointer;
+            color: #64748b;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #ef4444;
+        }
+
+        .modal-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .date-list {
+            width: 300px;
+            border-right: 1px solid var(--gray-200);
+            overflow-y: auto;
+            padding: 20px;
+            background: var(--gray-50);
+        }
+
+        .date-item {
+            padding: 16px 20px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .date-item:hover {
+            transform: translateX(6px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .date-item.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .record-details {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .record-card {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 28px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        @media print {
+            body { padding: 0; background: white; }
+            .container { box-shadow: none; border-radius: 0; max-width: 100%; }
+            .header { background: #0f172a; color: white; }
+            button, .modal, .form-section { display: none !important; }
+            
+            .content { padding: 20px; }
+            table { border-collapse: collapse; }
+            th, td { border: 1px solid #333 !important; padding: 12px; }
+            td[contenteditable="true"] { background: white !important; }
+            
+            .print-header {
+                text-align: center;
+                margin-bottom: 30px;
+                border-bottom: 3px solid var(--primary);
+                padding-bottom: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1><i class="fas fa-clock"></i> DAILY TIME RECORD</h1>
+        <p>Professional Activity Tracking System</p>
+    </div>
+
+    <div class="content">
+
+        <div class="form-section">
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Employee Name</label>
+                    <input type="text" id="name" placeholder="Full name">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-briefcase"></i> Position</label>
+                    <select id="position">
+                        <option value="">Select Position</option>
+                        <option>Associate</option>
+                        <option>Staff</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-users"></i> Group</label>
+                    <div class="inline-group">
+                        <select id="groupSelect" onchange="toggleGroupInput()">
+                            <option value="N/A">N/A</option>
+                            <option>ME-FP1</option>
+                            <option>ME-APQP</option>
+                            <option>ME-FP2</option>
+                            <option>ME-MPPD</option>
+                            <option value="Others">Others</option>
+                        </select>
+                        <input type="text" id="otherGroup" placeholder="Specify group" style="display:none; width:100%;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-exchange-alt"></i> Shift</label>
+                    <select id="shift">
+                        <option value="">Select Shift</option>
+                        <option>Shift A</option>
+                        <option>Shift B</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-map-marker-alt"></i> Assigned Area</label>
+                    <div class="inline-group">
+                        <select id="assignedArea" onchange="toggleAssignedArea()">
+                            <option value="N/A">N/A</option>
+                            <option>Production</option>
+                            <option>Warehouse</option>
+                            <option>Packing</option>
+                            <option>Quality Control</option>
+                            <option value="Others">Others</option>
+                        </select>
+                        <input type="text" id="otherArea" placeholder="Specify area" style="display:none; width:100%;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-calendar-day"></i> Date</label>
+                    <input type="date" id="date">
+                </div>
+
+            </div>
+        </div>
+
+        <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-list-check"></i> Daily Activity Log
+        </h3>
+        
+        <div class="table-container">
+            <table id="activityTable">
+                <thead>
+                    <tr>
+                        <th style="width: 170px;">Time Slot</th>
+                        <th>Activities / Tasks Completed</th>
+                        <th style="width: 170px;">Progress Status</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="button-container">
+            <button class="primary" onclick="saveRecord()">
+                <i class="fas fa-save"></i> Save Record
+            </button>
+            <button class="secondary" onclick="loadRecords()">
+                <i class="fas fa-history"></i> View Past Records
+            </button>
+            <button class="print-btn" onclick="window.print()">
+                <i class="fas fa-print"></i> Print / Export
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<div id="recordModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-history"></i> Previous Daily Records</h3>
+            <span class="close-btn" onclick="closeModal()">×</span>
+        </div>
+        <div class="modal-body">
+            <div class="date-list" id="dateList"></div>
+            <div class="record-details" id="recordDetails">
+                <div style="text-align:center; margin-top:120px; color:#64748b;">
+                    <i class="fas fa-calendar-alt" style="font-size:48px; opacity:0.3;"></i>
+                    <p style="margin-top:20px;">Select a date from the left to view detailed records</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+const SUPABASE_URL = "https://fvjtvvfjqcnlrywdwprd.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2anR2dmZqcWNubHJ5d2R3cHJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0MzA4NzksImV4cCI6MjA5NzAwNjg3OX0.3hpvHG-WCrqBzeJHFXbD4N_hkOqN33GzuGYso1efv38";
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const times = [
+    "06:00 - 07:00", "07:00 - 08:00", "08:00 - 09:00", "09:00 - 10:00",
+    "10:00 - 11:00", "11:00 - 12:00", "12:00 - 01:00", "01:00 - 02:00",
+    "02:00 - 03:00", "03:00 - 04:00", "04:00 - 05:00", "05:00 - 06:00"
+];
+
+function buildTable() {
+    const tbody = document.querySelector("#activityTable tbody");
+    tbody.innerHTML = "";
+
+    times.forEach((time, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td><strong>${time}</strong></td>
+            <td contenteditable="true" data-placeholder="Describe tasks performed..."></td>
+            <td>
+                <select>
+                    <option value="Done">Done</option>
+                    <option value="10%">10%</option>
+                    <option value="20%">20%</option>
+                    <option value="50%">50%</option>
+                    <option value="100%">100%</option>
+                </select>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function toggleGroupInput() {
+    const select = document.getElementById("groupSelect");
+    const other = document.getElementById("otherGroup");
+    other.style.display = select.value === "Others" ? "block" : "none";
+}
+
+function toggleAssignedArea() {
+    const select = document.getElementById("assignedArea");
+    const other = document.getElementById("otherArea");
+    other.style.display = select.value === "Others" ? "block" : "none";
+}
+
+async function saveRecord() {
+    const activities = [];
+    document.querySelectorAll("#activityTable tbody tr").forEach(row => {
+        activities.push({
+            time: row.cells[0].textContent.trim(),
+            activity: row.cells[1].textContent.trim(),
+            status: row.querySelector("select").value
+        });
+    });
+
+    let group = document.getElementById("groupSelect").value;
+    if (group === "Others") group = document.getElementById("otherGroup").value.trim();
+
+    let area = document.getElementById("assignedArea").value;
+    if (area === "Others") area = document.getElementById("otherArea").value.trim();
+
+    const record = {
+        employee_name: document.getElementById("name").value.trim(),
+        position: document.getElementById("position").value,
+        employee_group: group || "N/A",
+        shift: document.getElementById("shift").value,
+        assigned_area: area || "N/A",
+        record_date: document.getElementById("date").value,
+        activities: activities
+    };
+
+    if (!record.employee_name || !record.record_date) {
+        alert("⚠️ Please enter Employee Name and Date");
+        return;
+    }
+
+    const { error } = await db.from("daily_time_records").insert([record]);
+
+    if (error) {
+        alert("❌ Error: " + error.message);
+        return;
+    }
+
+    alert("✅ Record saved successfully!");
+}
+
+/* ================= LOAD RECORDS ================= */
+async function loadRecords() {
+    const modal = document.getElementById("recordModal");
+    modal.style.display = "block";
+
+    const dateList = document.getElementById("dateList");
+    const details = document.getElementById("recordDetails");
+
+    dateList.innerHTML = `<p style="text-align:center; padding:30px; color:#64748b;">Loading...</p>`;
+
+    const { data, error } = await db
+        .from("daily_time_records")
+        .select("*")
+        .order("record_date", { ascending: false });
+
+    if (error) {
+        dateList.innerHTML = `<p style="color:#ef4444; padding:20px;">Error loading records</p>`;
+        return;
+    }
+
+    const uniqueDates = [...new Set(data.map(r => r.record_date))];
+    dateList.innerHTML = "";
+
+    uniqueDates.forEach(date => {
+        const div = document.createElement("div");
+        div.className = "date-item";
+        div.innerHTML = `<i class="fas fa-calendar"></i> ${date}`;
+        
+        div.onclick = () => {
+            document.querySelectorAll('.date-item').forEach(el => el.classList.remove('active'));
+            div.classList.add('active');
+
+            const records = data.filter(r => r.record_date === date);
+            let html = `<h3 style="margin-bottom:24px; color:var(--primary);">${date}</h3>`;
+
+            records.forEach(r => {
+                html += `
+                <div class="record-card">
+                    <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:16px;">
+                        <div>
+                            <strong style="font-size:18px;">${r.employee_name}</strong><br>
+                            <span style="color:#64748b;">${r.position || ''} • ${r.shift || ''}</span>
+                        </div>
+                        <div style="text-align:right; font-size:13px; color:#64748b;">
+                            ${r.employee_group} | ${r.assigned_area}
+                        </div>
+                    </div>
+                    
+                    <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                        <thead>
+                            <tr style="background:#f1f5f9;">
+                                <th style="padding:12px; text-align:left; border-bottom:2px solid #cbd5e1;">Time</th>
+                                <th style="padding:12px; text-align:left; border-bottom:2px solid #cbd5e1;">Activity</th>
+                                <th style="padding:12px; text-align:center; width:130px; border-bottom:2px solid #cbd5e1;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${r.activities.map(a => `
+                                <tr>
+                                    <td style="padding:12px; border-bottom:1px solid #e2e8f0;">${a.time}</td>
+                                    <td style="padding:12px; border-bottom:1px solid #e2e8f0;">${a.activity || '—'}</td>
+                                    <td style="padding:12px; text-align:center; border-bottom:1px solid #e2e8f0;">
+                                        <strong>${a.status}</strong>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            });
+
+            details.innerHTML = html;
+        };
+        dateList.appendChild(div);
+    });
+}
+
+function closeModal() {
+    document.getElementById("recordModal").style.display = "none";
+}
+
+window.onload = () => {
+    document.getElementById("date").value = new Date().toISOString().split("T")[0];
+    buildTable();
+
+    window.onclick = function(e) {
+        const modal = document.getElementById("recordModal");
+        if (e.target === modal) closeModal();
+    };
+};
+</script>
+
+</body>
+</html>
