@@ -221,7 +221,7 @@
         button.secondary { background: #64748b; color: white; }
         button.print-btn { background: var(--accent); color: white; }
 
-        /* MODAL */
+        /* ====================== MODAL ====================== */
         .modal {
             display: none;
             position: fixed;
@@ -230,14 +230,14 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(12px);
         }
 
         .modal-content {
             background: white;
             width: 95%;
-            max-width: 1080px;
+            max-width: 1100px;
             margin: 20px auto;
             border-radius: 20px;
             max-height: 92vh;
@@ -245,6 +245,73 @@
             flex-direction: column;
             overflow: hidden;
             box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--gray-50);
+        }
+
+        .close-btn {
+            font-size: 36px;
+            font-weight: 300;
+            cursor: pointer;
+            color: #64748b;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #ef4444;
+        }
+
+        .modal-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            flex-direction: row;
+        }
+
+        .date-list {
+            width: 300px;
+            border-right: 1px solid var(--gray-200);
+            overflow-y: auto;
+            padding: 16px;
+            background: var(--gray-50);
+        }
+
+        .date-item {
+            padding: 16px 20px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .date-item:hover {
+            transform: translateX(6px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .date-item.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .record-details {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
         }
 
         /* ================= MOBILE RESPONSIVE ================= */
@@ -270,9 +337,7 @@
                 min-width: 100%;
             }
 
-            .table-container {
-                margin: 0 -4px;
-            }
+            .table-container { margin: 0 -4px; }
 
             th, td {
                 padding: 12px 10px;
@@ -289,15 +354,43 @@
                 padding: 16px 24px;
                 font-size: 16px;
             }
+
+            /* Mobile Modal */
+            .modal-content {
+                width: 98%;
+                margin: 10px auto;
+                max-height: 95vh;
+            }
+
+            .modal-body {
+                flex-direction: column;
+            }
+
+            .date-list {
+                width: 100%;
+                max-height: 45vh;
+                border-right: none;
+                border-bottom: 1px solid var(--gray-200);
+                overflow-y: auto;
+                padding: 12px;
+            }
+
+            .record-details {
+                padding: 20px;
+                max-height: 55vh;
+            }
+
+            .date-item {
+                margin: 6px 4px;
+                padding: 14px 16px;
+                font-size: 15px;
+            }
         }
 
         @media (max-width: 480px) {
             .header { padding: 24px 16px; }
             .content { padding: 20px 14px; }
-            
-            td[contenteditable="true"] {
-                min-height: 52px;
-            }
+            td[contenteditable="true"] { min-height: 52px; }
         }
 
         /* PRINT STYLES */
@@ -422,9 +515,9 @@
             <h3><i class="fas fa-history"></i> Previous Records</h3>
             <span class="close-btn" onclick="closeModal()">×</span>
         </div>
-        <div class="modal-body" style="display: flex; flex: 1; overflow: hidden;">
-            <div class="date-list" id="dateList" style="width: 100%; max-width: 320px; border-right: 1px solid var(--gray-200);"></div>
-            <div class="record-details" id="recordDetails" style="flex: 1; padding: 24px; overflow-y: auto;"></div>
+        <div class="modal-body">
+            <div class="date-list" id="dateList"></div>
+            <div class="record-details" id="recordDetails"></div>
         </div>
     </div>
 </div>
@@ -525,6 +618,7 @@ async function loadRecords() {
     const details = document.getElementById("recordDetails");
 
     dateList.innerHTML = `<p style="text-align:center; padding:40px 20px; color:#64748b;">Loading records...</p>`;
+    details.innerHTML = "";
 
     const { data, error } = await db
         .from("daily_time_records")
@@ -542,7 +636,6 @@ async function loadRecords() {
     uniqueDates.forEach(date => {
         const div = document.createElement("div");
         div.className = "date-item";
-        div.style.margin = "8px";
         div.innerHTML = `<i class="fas fa-calendar"></i> ${date}`;
         
         div.onclick = () => {
@@ -555,7 +648,7 @@ async function loadRecords() {
             records.forEach(r => {
                 html += `
                 <div class="record-card">
-                    <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
                         <div>
                             <strong>${r.employee_name}</strong><br>
                             <span style="color:#64748b;">${r.position || ''} • ${r.shift || ''}</span>
@@ -585,7 +678,7 @@ async function loadRecords() {
                 </div>`;
             });
 
-            details.innerHTML = html || "<p style='text-align:center; color:#64748b;'>No records for this date.</p>";
+            details.innerHTML = html || "<p style='text-align:center; color:#64748b; padding:40px;'>No records found for this date.</p>";
         };
         dateList.appendChild(div);
     });
